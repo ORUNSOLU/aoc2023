@@ -1,10 +1,10 @@
 use std::str::FromStr;
-use std::cmp::{PartialOrd, PartialEq};
 use std::default::Default;
+use std::cmp::max;
 
 
 // assuming the selections are not more than 1byte
-#[derive(Debug, PartialEq, Default, PartialOrd)]
+#[derive(Debug, Default)]
 pub struct Selection {
     pub red: usize,
     pub blue: usize,
@@ -90,5 +90,29 @@ pub fn part1(target_selection: Selection) {
         }
     }
     println!("{:?}", counter);
+}
+
+pub fn part2() {
+    let input_data = include_str!("/home/dru/Rust_projects/aoc2023/src/data/data2.txt");
+    let mut counter = usize::default();
+
+    for lines in input_data.lines() {
+        let (_, color_selections) = split_on_colon(lines);
+        for cs in color_selections.lines() {
+            let line_selections = split_on_semicolon(cs.to_string()); // each game_id run
+            let results: Vec<Selection> = line_selections
+                .iter()
+                .map(|ss| Selection::from_str(ss.as_str()).expect("Error parsing input"))
+                .collect();
+            let mut red = 0; let mut green = 0; let mut blue = 0;
+            for select in results {
+                red = max(red, select.red);
+                green = max(green, select.green);
+                blue = max(blue, select.blue);
+            }
+            counter += red * green * blue;
+        }
+    }
+    println!("Counter: {}", counter);
 }
 
