@@ -1,26 +1,20 @@
-// a rust program can only have one library, continue from there
 use std::str::FromStr;
-use std::cmp::{PartialOrd, Ordering, PartialEq};
+use std::cmp::{PartialOrd, PartialEq};
 use std::default::Default;
 
 
-// #[derive(Debug)]
-// struct Games {
-//     game_id: usize,
-//     selction: Selection
-// }
-
 // assuming the selections are not more than 1byte
-#[derive(Debug, PartialEq, Default)]
+#[derive(Debug, PartialEq, Default, PartialOrd)]
 pub struct Selection {
-    pub blue: usize,
     pub red: usize,
+    pub blue: usize,
     pub green: usize,
 }
 
 impl FromStr for Selection {
     type Err = &'static str;
     
+    // this function takes in a single game instance
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let mut blue: usize = 0;
         let mut red: usize = 0;
@@ -28,31 +22,24 @@ impl FromStr for Selection {
 
         let parts: Vec<&str> = s.trim().split(',').collect();
         for part in parts {
-            let whole_selection: Vec<&str> = part.split(" ").collect();
-            let selection_number = whole_selection.get(1).unwrap().parse::<usize>().unwrap();
-            match *whole_selection.get(0).unwrap() {
+            // let whole_selection: Vec<&str> = part.split(" ").collect();
+            let whole_selection: Vec<_> = part.trim().split_whitespace().collect();
+            let selection_number = whole_selection.get(0).unwrap().parse::<usize>().unwrap();
+            match *whole_selection.get(1).unwrap() {
                 "blue" => blue = selection_number,
                 "red" => red = selection_number,
                 "green" => green = selection_number,
-                _ => return Err("Wrong selection input")
+                _ => println!("Error parsing input")
             }
         }
 
         Ok( Self {
-            blue: blue,
             red: red,
+            blue: blue,
             green: green
         })
     }
 }
-
-impl PartialOrd for Selection {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.red.partial_cmp(&other.red)
-    }
-}
-
-
 
 // use this to return the GameID and selections seperately
 fn split_on_colon(input_str: &str) -> (String, String) {
@@ -74,19 +61,34 @@ fn split_on_semicolon(color_selections: String) -> Vec<String> {
     let whole_string: Vec<&str> = color_selections.split(";").collect();
     let mut selections: Vec<String> = vec![];
     for selection in whole_string {
-        selections.push(selection.to_string());
+        selections.push(selection.trim().to_string());
     }
     selections
 }
 
-pub fn part1() {
-    let input_data = include_str!("/home/dru/Rust_projects/aoc2023/src/data/test_data2.txt");
+pub fn part1(target_selection: Selection) {
+    let input_data = include_str!("/home/dru/Rust_projects/aoc2023/src/data/data2.txt");
+    let mut counter = 0; // variable to add up the gameID
+
     for lines in input_data.lines() {
         let (game_id, color_selections) = split_on_colon(lines);
         let id = game_number(game_id); // returns a u16
-        let cs = split_on_semicolon(color_selections);
-        println!("{:?}", cs);
-        
+
+        for cs in color_selections.lines() {
+            let line_selections = split_on_semicolon(cs.to_string()); // each game_id run
+            
+
+            let results: Vec<Selection> = line_selections
+                .iter()
+                .map(|ss| Selection::from_str(ss.as_str()).expect("Error parsing input"))
+                .filter(|ss| (ss.green > target_selection.green) | (ss.red > target_selection.red) | (ss.blue > target_selection.blue))
+                .collect();
+            
+            if results.is_empty() {
+                counter += id;
+            }
+        }
     }
+    println!("{:?}", counter);
 }
 

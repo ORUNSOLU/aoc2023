@@ -1,5 +1,5 @@
+#![allow(dead_code)]
 use aho_corasick::AhoCorasick;
-
 
 fn join_numbers(a: u8, b: u8) -> u32 {
     let joined = format!("{}{}", a, b);
